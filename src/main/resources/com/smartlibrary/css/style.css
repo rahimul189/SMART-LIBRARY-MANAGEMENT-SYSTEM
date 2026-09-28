@@ -1,0 +1,903 @@
+/* ===================== Base ===================== */
+
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+.root-bg {
+    -fx-background-color: linear-gradient(to bottom right, #2c3e50, #1c2a3a);
+}
+
+.content-pane {
+    -fx-background-color: #f4f6f9;
+}
+
+/* ===================== Login screen ===================== */
+
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 18, 0.15, 0, 6);
+}
+
+/* The application name on the login screen - large, centered and prominent. */
+.login-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+    -fx-wrap-text: true;
+}
+
+.login-subtitle {
+    -fx-font-size: 15px;
+    -fx-text-fill: #b6c4d4;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+}
+
+.avatar-icon {
+    -fx-fill: #e0c9a6;
+}
+
+.error-text {
+    -fx-text-fill: #c0392b;
+    -fx-font-size: 13px;
+}
+
+/* Success line of an in-page form (e.g. Change Password) - same scene as the
+   error text above, just green so the two outcomes are told apart at a glance. */
+.success-text {
+    -fx-text-fill: #1e8449;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* Help > User Guide: the category tree on the left of the guide page. */
+.tree-view {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e3e8ee;
+    -fx-border-radius: 10;
+    -fx-padding: 6;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+.tree-view .tree-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c3e50;
+}
+.tree-view .tree-cell:hover {
+    -fx-background-color: #f4f6f8;
+}
+.tree-view .tree-cell:selected {
+    -fx-background-color: #eef1f5;
+    -fx-text-fill: #41505f;
+    -fx-font-weight: bold;
+}
+
+/* ===================== Menu pages: About & User Guide ==================== */
+
+/* Flat header strip at the top of both pages: one colour, no gradient and no
+   decorative circles - the same dark blue as the table headings. */
+.about-banner {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 14;
+    -fx-padding: 22 30 24 30;
+    -fx-effect: dropshadow(gaussian, rgba(74, 35, 90, 0.32), 22, 0.3, 0, 8);
+}
+.banner-title {
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+.banner-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #b9c4d6;
+    -fx-padding: 6 0 0 0;
+}
+
+/* 4px accent edge that sits flush on top of a white card. */
+.card-edge {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 12 12 0 0;
+    -fx-min-height: 4;
+    -fx-pref-height: 4;
+}
+
+/* Section heading: small accent bar + the bold title. */
+.section-head {
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 9;
+}
+.section-bar {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 3;
+    -fx-pref-width: 5;
+    -fx-min-height: 17;
+    -fx-max-height: 17;
+}
+
+/* About the Application card: light paper with an accent rail. */
+.about-card {
+    -fx-background-color: #f7f9fb;
+    -fx-background-radius: 14;
+    -fx-border-color: #e3e8ee;
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.10), 16, 0.2, 0, 4);
+}
+.about-card-bar {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 14 0 0 14;
+}
+.about-para {
+    -fx-text-fill: #41505f;
+    -fx-font-size: 13.5px;
+    -fx-line-spacing: 3;
+}
+
+/* Credits */
+.col-head {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #41505f;
+    -fx-padding: 0 0 3 0;
+}
+.student-name {
+    -fx-font-size: 16.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.fact-key {
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.fact-value {
+    -fx-text-fill: #41505f;
+    -fx-wrap-text: true;
+}
+.inst-card {
+    -fx-background-color: #fbfcfd;
+    -fx-background-radius: 12;
+    -fx-border-color: #e3e8ee;
+    -fx-border-radius: 12;
+    -fx-padding: 13 15;
+}
+.inst-name {
+    -fx-font-size: 14.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.role-pill {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 12;
+    -fx-text-fill: #41505f;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 12;
+    -fx-alignment: CENTER;
+}
+.inst-where {
+    -fx-text-fill: #5d6d7e;
+    -fx-font-size: 12.5px;
+    -fx-wrap-text: true;
+}
+
+/* Technologies Used */
+.tech-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e3e8ee;
+    -fx-border-radius: 12;
+    -fx-padding: 11 13;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 11;
+    -fx-effect: dropshadow(gaussian, rgba(34, 49, 79, 0.07), 7, 0.2, 0, 2);
+}
+.tech-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(34, 49, 79, 0.18), 16, 0.3, 0, 6);
+    -fx-border-color: #cfd8e0;
+}
+.tech-ring {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 10;
+    -fx-pref-width: 20;
+    -fx-pref-height: 20;
+    -fx-min-width: 20;
+    -fx-min-height: 20;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+    -fx-alignment: CENTER;
+}
+.tech-dot {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 6;
+    -fx-pref-width: 11;
+    -fx-pref-height: 11;
+}
+.tech-name {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.tech-sub {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #8391a0;
+    -fx-padding: 2 0 0 0;
+}
+
+.divider-line {
+    -fx-background-color: #e3e8ee;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+}
+
+/* Project Information tiles */
+.info-tile {
+    -fx-background-color: #f7f9fc;
+    -fx-background-radius: 10;
+    -fx-border-color: #e3e8ee;
+    -fx-border-radius: 10;
+    -fx-min-width: 158;
+}
+.info-tile-bar {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 10 10 0 0;
+    -fx-pref-height: 3;
+    -fx-min-height: 3;
+}
+.info-tile-body {
+    -fx-padding: 9 16 10 16;
+    -fx-spacing: 3;
+}
+.info-label {
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8391a0;
+}
+.info-value {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+/* User Guide: category tree roles + the detail card on the right. */
+.tree-view .tree-cell.guide-root {
+    -fx-font-size: 12.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.tree-view .tree-cell.guide-group {
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #41505f;
+}
+.guide-crumb {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 12;
+    -fx-text-fill: #41505f;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 12;
+}
+.guide-detail-title {
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-padding: 8 0 0 0;
+}
+.guide-summary {
+    -fx-text-fill: #5d6d7e;
+    -fx-font-size: 13.5px;
+    -fx-wrap-text: true;
+}
+.guide-block {
+    -fx-spacing: 5;
+}
+.guide-block-label {
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7f8c9b;
+    -fx-padding: 8 0 0 0;
+}
+.guide-tip {
+    -fx-background-color: #f7f9fb;
+    -fx-background-radius: 10;
+    -fx-border-color: #e3e8ee;
+    -fx-border-radius: 10;
+    -fx-border-width: 1 1 1 4;
+    -fx-padding: 10 15;
+    -fx-spacing: 5;
+}
+.guide-step-row {
+    -fx-spacing: 9;
+    -fx-alignment: CENTER_LEFT;
+}
+.guide-step-no {
+    -fx-font-weight: bold;
+    -fx-text-fill: #22314f;
+    -fx-padding: 0 3 0 0;
+}
+
+/* The scrollable detail card: no chrome of its own, the card inside has it. */
+.guide-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+/* Help > About sits in a ScrollPane like the profile screen: no frame. */
+.page-scroll {
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.login-tabs {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+.login-tabs .tab-header-area .tab-header-background {
+    -fx-background-color: transparent;
+}
+.login-tabs .tab {
+    -fx-background-color: #eef1f5;
+    -fx-background-insets: 0;
+    -fx-background-radius: 8 8 0 0;
+    -fx-padding: 8 20 6 20;
+}
+.login-tabs .tab:selected {
+    -fx-background-color: white;
+    -fx-background-radius: 8 8 0 0;
+}
+.login-tabs .tab .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+}
+.login-tabs .tab:selected .label {
+    -fx-text-fill: #2c3e50;
+}
+
+/* ===================== Sidebar ===================== */
+
+.sidebar {
+    -fx-background-color: linear-gradient(to bottom, #22314f, #1a2740);
+}
+
+/* Circular profile image: soft shadow behind the circle. */
+.avatar-frame {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.30), 10, 0.2, 0, 2);
+}
+
+/* Small "Choose File" button right under the profile circle. */
+.avatar-choose-button {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-text-fill: #e8eef7;
+    -fx-font-size: 11px;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+.avatar-choose-button:hover { -fx-background-color: rgba(255, 255, 255, 0.28); }
+.avatar-choose-button:pressed { -fx-background-color: rgba(255, 255, 255, 0.38); }
+
+.welcome-label {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.student-number-label {
+    -fx-text-fill: #bdc3c7;
+    -fx-font-size: 13px;
+}
+
+.nav-button {
+    -fx-background-color: #34495e;
+    -fx-text-fill: #eef2f7;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-wrap-text: true;
+    -fx-padding: 10 14 10 16;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-transition: -fx-background-color 0.15s ease-in-out;
+}
+.nav-button:hover {
+    -fx-background-color: #3f5871;
+}
+.nav-button:pressed {
+    -fx-background-color: #8e44ad;
+}
+
+/* The section the user is actually on: a deeper background, bold text and
+   the accent stripe on the left edge, so the sidebar always says where you
+   are (same idea as the open menu in the menu bar below). */
+.nav-button.nav-active {
+    -fx-background-color: #3f5871;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent transparent transparent #22314f;
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 8;
+    -fx-padding: 10 14 10 12;
+}
+
+/* Logout - pinned to the bottom-left corner of the sidebar. */
+.logout-button {
+    -fx-background-color: #c0392b;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 14 10 16;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-transition: -fx-background-color 0.15s ease-in-out;
+}
+.logout-button:hover { -fx-background-color: #a93226; }
+.logout-button:pressed { -fx-background-color: #922b21; }
+
+/* ===================== Titles / text ===================== */
+
+.page-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.page-subtitle {
+    -fx-font-size: 15px;
+    -fx-text-fill: #5d6d7e;
+}
+
+/* The small grey note that trails a form heading (the bracketed hint after
+   "Login credentials"): smaller and lighter than the heading, so the whole
+   line fits inside a narrow card instead of being clipped. */
+.field-hint {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #7f8c9b;
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+/* Card headings sit in the middle of their card on both dashboards. */
+.card-title {
+    -fx-font-size: 16.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-alignment: CENTER;
+}
+
+.stat-hint {
+    -fx-font-size: 13px;
+    -fx-text-fill: #5d6d7e;
+}
+
+/* The three "Your record" labels - one notch bigger than the other hints so
+   the list reads at a glance next to its 18px numbers. */
+.record-hint {
+    -fx-font-size: 14.5px;
+    -fx-text-fill: #5d6d7e;
+}
+
+/* Big, readable "answer" chip under every combo box / slider on the dashboard.
+   The height is what gives the long placeholder its room: the text keeps its
+   15px bold size and simply wraps onto a second line inside a taller chip. */
+.result-chip {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 10;
+    -fx-padding: 13 15 13 15;
+    -fx-min-height: 66px;
+    /* Cards in a row get the same height (see the controller), and the chip is
+       the only flexible child of its card - lifting the cap off its default
+       pref-height maximum is what lets it stretch down to the card's padding
+       when a neighbouring card's content is taller. */
+    -fx-max-height: 10000px;
+    -fx-text-fill: #41505f;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* ===================== Dashboard stat cards ===================== */
+
+.stat-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #eceff3;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 18 16 18 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 14, 0.12, 0, 4);
+}
+
+/* Same size and colour as the card headings, so the KPI row and the cards
+   below it read as one set of boxes. */
+.stat-label {
+    -fx-font-size: 16px;
+    -fx-text-fill: #2c3e50;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER;
+}
+
+.stat-value {
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #22314f;
+    -fx-alignment: CENTER;
+}
+
+/* ===================== Student dashboard =====================
+   The student section's landing page. Same palette as the rest of the
+   application: white cards, one dark-blue accent, green / amber / red for
+   urgency. */
+
+/* The borrowing-rule card gets the accent top edge of the dashboard cards. */
+.dash-rule {
+    -fx-border-color: #22314f #eceff3 #eceff3 #eceff3;
+    -fx-border-width: 3 1 1 1;
+    -fx-border-radius: 12;
+}
+
+/* One borrowed book inside the "Your books" card. */
+.dash-loan {
+    -fx-background-color: #fbfcfd;
+    -fx-background-radius: 10;
+    -fx-border-color: #eceff3;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 12 14 12 14;
+}
+
+/* Status pill: cool grey = plenty of time, amber = due soon, red = overdue. */
+.dash-chip {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 11;
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #41505f;
+    -fx-alignment: CENTER;
+}
+.dash-chip-soon { -fx-background-color: #fdf3e7; -fx-text-fill: #b9770e; }
+.dash-chip-late { -fx-background-color: #fdecea; -fx-text-fill: #c0392b; }
+
+/* Days kept out of the 60 allowed - a thin flat bar: green, amber, red. */
+.dash-progress {
+    -fx-pref-height: 8px;
+    -fx-min-height: 8px;
+    -fx-max-height: 8px;
+}
+.dash-progress > .track {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 4;
+    -fx-padding: 0;
+}
+.dash-progress > .bar {
+    -fx-background-color: #27ae60;
+    -fx-background-radius: 4;
+    -fx-padding: 0;
+}
+.dash-progress-soon > .bar { -fx-background-color: #e67e22; }
+.dash-progress-late > .bar { -fx-background-color: #c0392b; }
+
+/* One line of the recent-activity card: book, what happened, when. */
+.dash-activity {
+    -fx-padding: 3 2 3 2;
+}
+
+/* One line of "Your record": name on the left, number in a column on the
+   right, a hairline under it. The rows grow, so they share the card out. */
+.dash-record {
+    -fx-padding: 12 2 12 2;
+}
+.dash-record-div {
+    -fx-border-color: transparent transparent #eef1f5 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* The three numbers of that card, tinted by what they mean. */
+.record-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.record-value-back { -fx-text-fill: #1e8449; }
+.record-value-now { -fx-text-fill: #22314f; }
+
+/* ===================== Buttons ===================== */
+
+.btn-primary {
+    -fx-background-color: #8e44ad;
+    -fx-text-fill: white;
+    -fx-background-radius: 18;
+    -fx-cursor: hand;
+    -fx-padding: 9 22 9 22;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.btn-primary:hover { -fx-background-color: #7d3c98; }
+.btn-primary:pressed { -fx-background-color: #6c3483; }
+
+.btn-success {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+    -fx-background-radius: 18;
+    -fx-cursor: hand;
+    -fx-padding: 9 22 9 22;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.btn-success:hover { -fx-background-color: #219150; }
+.btn-success:pressed { -fx-background-color: #1c7d44; }
+
+.btn-secondary {
+    -fx-background-color: #95a5a6;
+    -fx-text-fill: white;
+    -fx-background-radius: 18;
+    -fx-cursor: hand;
+    -fx-padding: 9 22 9 22;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.btn-secondary:hover { -fx-background-color: #839192; }
+.btn-secondary:pressed { -fx-background-color: #707b7c; }
+
+/* Delete - the one destructive button, so it stands out from Save / Clear. */
+.btn-danger {
+    -fx-background-color: #c0392b;
+    -fx-text-fill: white;
+    -fx-background-radius: 18;
+    -fx-cursor: hand;
+    -fx-padding: 9 22 9 22;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.btn-danger:hover { -fx-background-color: #a93226; }
+.btn-danger:pressed { -fx-background-color: #922b21; }
+
+/* ===================== Inputs ===================== */
+
+.text-field, .password-field, .text-area, .combo-box, .choice-box, .date-picker {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #d5dbdb;
+    -fx-border-width: 1;
+    -fx-font-size: 14px;
+    -fx-padding: 8 10 8 10;
+}
+.text-field:focused, .password-field:focused, .text-area:focused,
+.combo-box:focused, .choice-box:focused, .date-picker:focused {
+    -fx-border-color: #22314f;
+}
+
+.combo-box .list-cell, .choice-box .label {
+    -fx-text-fill: #2c3e50;
+}
+
+.check-box, .radio-button {
+    -fx-font-size: 13px;
+}
+
+/* ===================== TableView ===================== */
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0.1, 0, 3);
+}
+.table-view .column-header-background {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 8 8 0 0;
+}
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent #33455f transparent transparent;
+    -fx-size: 36px;
+}
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER;
+}
+.table-view .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #ecf0f1 transparent;
+}
+.table-view .table-row-cell:odd {
+    -fx-background-color: #f8f9fb;
+}
+.table-view .table-row-cell:hover {
+    -fx-background-color: #f1f4f7;
+}
+.table-view .table-row-cell:selected {
+    -fx-background-color: #e4eaf1;
+}
+.table-view .table-row-cell:selected .text {
+    -fx-fill: #2c3e50;
+}
+.table-view .table-cell {
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 9 12 9 12;
+}
+.table-view .placeholder .label {
+    -fx-text-fill: #95a5a6;
+    -fx-font-style: italic;
+}
+
+/* ===================== ListView (borrowing history) ===================== */
+
+.list-view {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #dfe4ea;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+.list-view .list-cell {
+    -fx-background-color: white;
+    -fx-padding: 10 14 10 14;
+    -fx-font-size: 13px;
+}
+.list-view .list-cell:odd {
+    -fx-background-color: #f8f9fb;
+}
+.list-view .list-cell:selected {
+    -fx-background-color: #e4eaf1;
+    -fx-text-fill: #2c3e50;
+}
+.list-view .placeholder .label {
+    -fx-text-fill: #95a5a6;
+    -fx-font-style: italic;
+}
+
+/* ===================== Menu bar ===================== */
+
+.menu-bar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #e3e8ee transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.menu-bar > .container > .label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2c3e50;
+}
+.menu-bar .menu {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 6 12 6 12;
+}
+.menu-bar .menu .label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2c3e50;
+}
+.menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #eef1f5;
+}
+/* The menu that is open right now stands out the same way the current
+   sidebar section does: bold text in the accent colour. */
+.menu-bar .menu:showing .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #22314f;
+}
+
+.context-menu {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #dfe4ea;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 14, 0.12, 0, 5);
+}
+.menu-item {
+    -fx-padding: 8 22 8 22;
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+}
+.menu-item .label {
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 13px;
+}
+.menu-item:focused {
+    -fx-background-color: #eef1f5;
+}
+.menu-item:focused .label {
+    -fx-text-fill: #41505f;
+}
+.separator *.line {
+    -fx-border-color: #e8ecf1;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ===================== Slider (dashboard) ===================== */
+
+.slider {
+    -fx-pref-height: 44px;
+}
+.slider .track {
+    -fx-background-color: #e4e8ee;
+    -fx-background-radius: 6;
+    -fx-pref-height: 6px;
+}
+.slider .thumb {
+    -fx-background-color: #22314f;
+    -fx-background-radius: 12;
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 6, 0.2, 0, 2);
+}
+.slider .axis .label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5d6d7e;
+}
+.slider .axis .tick-mark {
+    -fx-stroke: #b9c2cc;
+}
+
+/* ===================== Scrollbars / ScrollPane ===================== */
+
+/* Always-available, styled scrollbars for tables and scroll panes,
+   so horizontal/vertical scrolling is obvious to the user. */
+.scroll-bar:horizontal, .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+.scroll-bar:horizontal {
+    -fx-pref-height: 13px;
+}
+.scroll-bar:vertical {
+    -fx-pref-width: 13px;
+}
+.scroll-bar .track {
+    -fx-background-color: #eef1f4;
+    -fx-background-radius: 6;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #b3b9c4;
+    -fx-background-radius: 6;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #22314f;
+}
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-pane {
+    /* NB: only -fx-background-color here. Setting -fx-background too would leak
+       a transparent background into every descendant and Modena then derives a
+       white text colour for plain labels inside the pane (they disappear). */
+    -fx-background-color: transparent;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* A ScrollPane that also carries the white-card style: the card fills the whole
+   panel height while the content inside scrolls when the window is too short. */
+.scroll-pane.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+}
+.scroll-pane.login-card > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane.content-pane {
+    -fx-background-color: #f4f6f9;
+}

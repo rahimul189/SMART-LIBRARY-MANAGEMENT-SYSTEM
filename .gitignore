@@ -1,0 +1,9 @@
+target/
+.idea/
+*.iml
+library.db
+authentication.json
+profile-images.json
+jsonbin.properties
+covers/
+avatars/

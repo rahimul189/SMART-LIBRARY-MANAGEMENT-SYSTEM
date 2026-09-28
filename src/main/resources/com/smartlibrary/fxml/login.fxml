@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.smartlibrary.controller.LoginController"
+           fx:id="loginRoot"
+           styleClass="root-bg">
+
+    <!-- prefWidth is bound to the window width in LoginController.initialize():
+         86% of the scene, clamped to [340, 560] by Bindings.max/min, so the
+         card always fills a sensible part of the window at any size. -->
+    <VBox fx:id="loginCard" alignment="CENTER" spacing="0" maxWidth="560">
+        <padding>
+            <Insets top="24" right="32" bottom="28" left="32"/>
+        </padding>
+
+        <!-- Application name: large, centered and impossible to miss. -->
+        <Label text="SMART LIBRARY MANAGEMENT SYSTEM"
+               styleClass="login-title"
+               alignment="CENTER"
+               maxWidth="500"
+               wrapText="true"/>
+        <Label text="Admin &amp; Student Portal"
+               styleClass="login-subtitle"
+               alignment="CENTER">
+            <padding>
+                <Insets top="8"/>
+            </padding>
+        </Label>
+
+        <VBox styleClass="login-card" spacing="0">
+            <padding>
+                <Insets top="8" right="24" bottom="24" left="24"/>
+            </padding>
+            <VBox.margin>
+                <Insets top="18"/>
+            </VBox.margin>
+
+            <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="login-tabs" maxWidth="Infinity">
+
+                <!-- Admin login -->
+                <Tab text="Admin">
+                    <VBox alignment="CENTER" spacing="12">
+                        <padding>
+                            <Insets top="18" bottom="6"/>
+                        </padding>
+
+                        <TextField fx:id="adminUsernameField" promptText="Username" maxWidth="260"/>
+                        <PasswordField fx:id="adminPasswordField" promptText="Password" maxWidth="260"/>
+
+                        <Button text="Login" styleClass="btn-primary" onAction="#handleAdminLogin" maxWidth="260"/>
+                        <Label fx:id="adminErrorLabel" styleClass="error-text" wrapText="true" maxWidth="260" alignment="CENTER"/>
+                    </VBox>
+                </Tab>
+
+                <!-- Student login -->
+                <Tab text="Student">
+                    <VBox alignment="CENTER" spacing="12">
+                        <padding>
+                            <Insets top="18" bottom="6"/>
+                        </padding>
+
+                        <TextField fx:id="studentEmailField" promptText="Email" maxWidth="260"/>
+                        <PasswordField fx:id="studentPasswordField" promptText="Password" maxWidth="260"/>
+
+                        <Button text="Login" styleClass="btn-primary" onAction="#handleStudentLogin" maxWidth="260"/>
+                        <Label fx:id="studentErrorLabel" styleClass="error-text" wrapText="true" maxWidth="260" alignment="CENTER"/>
+                    </VBox>
+                </Tab>
+
+            </TabPane>
+        </VBox>
+    </VBox>
+
+</StackPane>

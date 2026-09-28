@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smartlibrary.controller.AdminDashboardController"
+            fx:id="rootPane"
+            styleClass="content-pane">
+
+    <!-- Application menu bar, on the dashboard so it stays visible on every
+         admin sub screen. Same File / View / Help entries as the student bar
+         - and deliberately no Account menu on the admin side. -->
+    <top>
+        <MenuBar fx:id="appMenuBar">
+            <menus>
+                <Menu text="File">
+                    <items>
+                        <MenuItem text="Exit" onAction="#handleExit"/>
+                    </items>
+                </Menu>
+                <Menu text="View">
+                    <items>
+                        <MenuItem fx:id="fullScreenMenuItem" text="Full Screen"
+                                  onAction="#handleFullScreen"/>
+                        <MenuItem text="Reset View" onAction="#handleResetView"/>
+                    </items>
+                </Menu>
+                <Menu text="Help">
+                    <items>
+                        <MenuItem text="User Guide" onAction="#handleUserGuide"/>
+                        <MenuItem text="About" onAction="#handleAbout"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+
+    <left>
+        <VBox fx:id="sidebar" spacing="6" alignment="TOP_CENTER" styleClass="sidebar" prefWidth="210" minWidth="180">
+            <padding>
+                <Insets top="20" bottom="12" left="15" right="15"/>
+            </padding>
+
+            <!-- Circular profile image (filled by handleChooseAvatar). -->
+            <StackPane prefWidth="76" prefHeight="76" styleClass="avatar-frame">
+                <Circle radius="36" styleClass="avatar-icon"/>
+                <ImageView fx:id="avatarImageView" fitWidth="72" fitHeight="72" mouseTransparent="true"/>
+                <Circle radius="35" fill="TRANSPARENT" stroke="#d9ffffff"
+                       style="-fx-stroke-width: 3;" mouseTransparent="true"/>
+            </StackPane>
+            <Button text="Choose File" styleClass="avatar-choose-button" onAction="#handleChooseAvatar"/>
+
+            <Label text="Admin Panel" styleClass="welcome-label">
+                <VBox.margin>
+                    <Insets top="4"/>
+                </VBox.margin>
+            </Label>
+            <Label text="SmartLibrary" styleClass="student-number-label"/>
+
+            <VBox spacing="8" alignment="CENTER" maxWidth="Infinity">
+                <padding>
+                    <Insets top="10"/>
+                </padding>
+                <Button fx:id="navDashboard" text="Dashboard" styleClass="nav-button" maxWidth="Infinity" onAction="#showHome"/>
+                <Button fx:id="navBooks" text="Manage Books" styleClass="nav-button" maxWidth="Infinity" onAction="#showManageBooks"/>
+                <Button fx:id="navMembers" text="Manage Members" styleClass="nav-button" maxWidth="Infinity" onAction="#showManageMembers"/>
+                <Button fx:id="navIssue" text="Issue Book" styleClass="nav-button" maxWidth="Infinity" onAction="#showIssueBook"/>
+                <Button fx:id="navReturn" text="Return Book" styleClass="nav-button" maxWidth="Infinity" onAction="#showReturnBook"/>
+            </VBox>
+
+            <!-- Flexible spacer: keeps Logout pinned to the bottom-left corner
+                 at any window size, without ever overlapping the nav buttons. -->
+            <Region minWidth="0" minHeight="0" maxWidth="Infinity" VBox.vgrow="ALWAYS"/>
+
+            <Button text="Logout" styleClass="logout-button" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+
+    <center>
+        <!-- The ScrollPane itself is swapped in and out of the center, so the
+             dashboard keeps scrolling when the window is small. fitToWidth makes
+             the cards reflow to the window width instead of forcing a wide layout. -->
+        <ScrollPane fx:id="homeScrollPane" fitToWidth="true" styleClass="content-pane"
+                    BorderPane.alignment="CENTER">
+            <content>
+                <VBox fx:id="homeView" spacing="12" styleClass="content-pane" minWidth="0">
+                    <padding>
+                        <!-- Vertical padding is kept tight (14 instead of 28):
+                             the three titles below now wrap onto two lines and
+                             the answer cards are as tall as a wrapped title,
+                             and the whole dashboard must still fit the designed
+                             960 x 580 window without a scrollbar. -->
+                        <Insets top="14" bottom="14" left="28" right="28"/>
+                    </padding>
+
+                    <Label text="ADMIN DASHBOARD" styleClass="page-title"/>
+                    <Label text="A quick overview of the library right now." styleClass="page-subtitle" wrapText="true"/>
+
+                    <!-- KPI cards: FlowPane lets them wrap onto the next row
+                         when the window gets narrow, so nothing shrinks to an
+                         unreadable size. Every card's prefWidth is bound to
+                         statsFlowPane.width in the controller, so all five
+                         cards share the row (minus the gaps) on the designed
+                         window and drop to the 116px floor - which triggers
+                         the wrap - when there is no longer enough room. The
+                         labels wrap instead of being cut off, and a fixed
+                         minHeight on every card keeps the row at one matching
+                         height - a static floor, so dragging the window cannot
+                         make the cards chase each other's height and jitter. -->
+                    <FlowPane fx:id="statsFlowPane" hgap="18" vgap="18" minWidth="320" maxWidth="Infinity">
+                        <children>
+                            <VBox styleClass="stat-card" spacing="6" alignment="CENTER" prefWidth="260" minWidth="116" minHeight="146">
+                                <Label text="Total Books" styleClass="stat-label" wrapText="true"/>
+                                <Label fx:id="totalBooksLabel" text="0" styleClass="stat-value"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" spacing="6" alignment="CENTER" prefWidth="260" minWidth="116" minHeight="146">
+                                <Label text="Available Books" styleClass="stat-label" wrapText="true"/>
+                                <Label fx:id="availableBooksLabel" text="0" styleClass="stat-value"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" spacing="6" alignment="CENTER" prefWidth="260" minWidth="116" minHeight="146">
+                                <Label text="Total Members" styleClass="stat-label" wrapText="true"/>
+                                <Label fx:id="totalMembersLabel" text="0" styleClass="stat-value"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" spacing="6" alignment="CENTER" prefWidth="260" minWidth="116" minHeight="146">
+                                <Label text="Issued Books" styleClass="stat-label" wrapText="true"/>
+                                <Label fx:id="issuedBooksLabel" text="0" styleClass="stat-value"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" spacing="6" alignment="CENTER" prefWidth="260" minWidth="116" minHeight="146">
+                                <Label text="Members Currently Borrowing" styleClass="stat-label" wrapText="true"/>
+                                <Label fx:id="membersBorrowingLabel" text="0" styleClass="stat-value"/>
+                            </VBox>
+                        </children>
+                    </FlowPane>
+
+                    <!-- Combo boxes & slider: bigger titles, a labelled slider
+                         and a large result chip under every control. Same
+                         binding idea as the KPI row: card width follows the
+                         pane width, floored at 206px before wrapping - the
+                         floor keeps all three cards in one row on the
+                         designed window, so nothing sits below the fold.
+                         The 263px minHeight is the height a card needs once
+                         its title wraps onto a second line, so all three
+                         cards stay the same height at every window size
+                         instead of only when the titles fit on one line. -->
+                    <FlowPane fx:id="filterFlowPane" hgap="18" vgap="18" minWidth="320" maxWidth="Infinity">
+                        <children>
+                            <VBox styleClass="login-card" spacing="12" prefWidth="340" minWidth="206" minHeight="263">
+                                <padding>
+                                    <Insets top="20" bottom="20" left="20" right="20"/>
+                                </padding>
+                                <Label text="Members by Department" styleClass="card-title" wrapText="true"/>
+                                <ComboBox fx:id="departmentFilterComboBox" maxWidth="Infinity"
+                                          promptText="Select a department..."/>
+                                <Label fx:id="departmentCountLabel"
+                                       text="Select a department to see its member count."
+                                       wrapText="true" styleClass="result-chip" VBox.vgrow="ALWAYS"/>
+                            </VBox>
+
+                            <VBox styleClass="login-card" spacing="12" prefWidth="340" minWidth="206" minHeight="263">
+                                <padding>
+                                    <Insets top="20" bottom="20" left="20" right="20"/>
+                                </padding>
+                                <Label text="Books by Category" styleClass="card-title" wrapText="true"/>
+                                <ComboBox fx:id="categoryFilterComboBox" maxWidth="Infinity"
+                                          promptText="Select a category..."/>
+                                <Label fx:id="categoryCountLabel"
+                                       text="Select a category to see its book count."
+                                       wrapText="true" styleClass="result-chip" VBox.vgrow="ALWAYS"/>
+                            </VBox>
+
+                            <VBox styleClass="login-card" spacing="12" prefWidth="340" minWidth="206" minHeight="263">
+                                <padding>
+                                    <Insets top="20" bottom="20" left="20" right="20"/>
+                                </padding>
+                                <Label text="Recent Borrowing Activity" styleClass="card-title" wrapText="true"/>
+                                <Label text="Look-back period (days)" styleClass="section-title"/>
+                                <Slider fx:id="borrowingActivitySlider" min="0" max="30" value="7"
+                                        majorTickUnit="5" minorTickCount="4" blockIncrement="1"
+                                        showTickMarks="true" showTickLabels="true" snapToTicks="true"
+                                        maxWidth="Infinity"/>
+                                <Label fx:id="borrowingActivityLabel"
+                                       text="Last 7 days: 0 borrowing activities"
+                                       wrapText="true" styleClass="result-chip" VBox.vgrow="ALWAYS"/>
+                            </VBox>
+                        </children>
+                    </FlowPane>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

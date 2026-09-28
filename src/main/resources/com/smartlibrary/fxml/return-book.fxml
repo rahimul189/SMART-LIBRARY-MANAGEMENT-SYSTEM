@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Step 11 - Admin: Return Book. Standalone screen - only returning an already-borrowed book is possible here. -->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smartlibrary.controller.ReturnBookController"
+            prefWidth="640" prefHeight="480"
+            styleClass="content-pane">
+
+    <top>
+        <VBox spacing="4">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="10"/>
+            </padding>
+            <Label text="Return Book" styleClass="page-title"/>
+        </VBox>
+    </top>
+
+    <center>
+        <!-- Built-in vertical scrollbar appears once there are more rows than fit.
+             The columns keep their readable widths (UNCONSTRAINED policy, see
+             the controller) and a horizontal scrollbar appears whenever the
+             window is too narrow for them, so the text is never squeezed.
+             minWidth/minHeight=0 lets the pane give the table only the space
+             that is left. -->
+        <TableView fx:id="borrowedTable" minWidth="0" minHeight="0">
+            <columns>
+                <TableColumn fx:id="studentNameColumn" text="Student" prefWidth="150" minWidth="120"/>
+                <TableColumn fx:id="studentIdColumn" text="Student ID" prefWidth="100" minWidth="90"/>
+                <TableColumn fx:id="bookTitleColumn" text="Book" prefWidth="200" minWidth="150"/>
+                <TableColumn fx:id="issueDateColumn" text="Issue Date" prefWidth="110" minWidth="100"/>
+                <TableColumn fx:id="deadlineColumn" text="Deadline" prefWidth="110" minWidth="100"/>
+                <TableColumn fx:id="daysKeptColumn" text="Days Kept" prefWidth="95" minWidth="85"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="130" minWidth="110"/>
+            </columns>
+            <placeholder>
+                <Label text="No books are currently borrowed."/>
+            </placeholder>
+            <BorderPane.margin>
+                <Insets left="20" right="20" top="0" bottom="10"/>
+            </BorderPane.margin>
+        </TableView>
+    </center>
+
+    <bottom>
+        <!-- Fixed-width, centred card so the date picker and button stay a
+             comfortable size on wide windows. -->
+        <VBox spacing="10" maxWidth="560" styleClass="login-card" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets left="20" right="20" bottom="18" top="18"/>
+            </padding>
+            <BorderPane.margin>
+                <Insets left="20" right="20" bottom="20"/>
+            </BorderPane.margin>
+
+            <Label text="Return Date" styleClass="section-title"/>
+            <DatePicker fx:id="returnDatePicker" maxWidth="Infinity"/>
+            <Button text="Return Selected Book" styleClass="btn-primary"
+                    maxWidth="Infinity" onAction="#handleReturn"/>
+            <Label fx:id="errorLabel" styleClass="error-text" wrapText="true"/>
+        </VBox>
+    </bottom>
+
+</BorderPane>

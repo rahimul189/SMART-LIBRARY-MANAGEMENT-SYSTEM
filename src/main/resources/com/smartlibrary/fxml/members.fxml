@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smartlibrary.controller.MemberController"
+            prefWidth="1000" prefHeight="620"
+            styleClass="content-pane">
+
+    <top>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="10"/>
+            </padding>
+            <Label text="Manage Members" styleClass="page-title"/>
+            <TextField fx:id="searchField" promptText="Search by student ID, name or email..."/>
+        </VBox>
+    </top>
+
+    <center>
+        <!-- The table keeps its own built-in scrollbars: vertical scrolling
+             appears as soon as there are more rows than fit, and a horizontal
+             scrollbar appears whenever the window is too narrow for the
+             columns (UNCONSTRAINED policy, see the controller) - the columns
+             keep their readable widths instead of being squeezed. The
+             minWidth/minHeight=0 lets the pane hand the table only whatever
+             space is left - the table scrolls inside that space instead of
+             overflowing onto the form panel. -->
+        <TableView fx:id="memberTable" minWidth="0" minHeight="0">
+            <columns>
+                <TableColumn fx:id="studentIdColumn" text="Student ID" prefWidth="110" minWidth="90"/>
+                <TableColumn fx:id="nameColumn" text="Name" prefWidth="160" minWidth="130"/>
+                <TableColumn fx:id="emailColumn" text="Email" prefWidth="190" minWidth="150"/>
+                <TableColumn fx:id="departmentColumn" text="Department" prefWidth="110" minWidth="90"/>
+                <TableColumn fx:id="phoneColumn" text="Phone" prefWidth="120" minWidth="100"/>
+                <TableColumn fx:id="genderColumn" text="Gender" prefWidth="90" minWidth="80"/>
+            </columns>
+            <placeholder>
+                <Label text="No members to show yet."/>
+            </placeholder>
+            <BorderPane.margin>
+                <Insets left="20" right="10" top="10" bottom="20"/>
+            </BorderPane.margin>
+        </TableView>
+    </center>
+
+    <right>
+        <!-- The detail form lives in a ScrollPane styled as the white card, so
+             the card always fills the panel height while the fields themselves
+             stay scrollable when the window is too short to show them all. -->
+        <ScrollPane fitToWidth="true"
+                    minWidth="260" prefWidth="300"
+                    styleClass="login-card">
+            <BorderPane.margin>
+                <Insets right="20" top="10" bottom="20"/>
+            </BorderPane.margin>
+
+            <content>
+                <VBox spacing="10" minWidth="0">
+                    <padding>
+                        <Insets top="20" left="20" right="20" bottom="20"/>
+                    </padding>
+
+                    <Label text="Member Details" styleClass="section-title"/>
+
+                    <TextField fx:id="studentIdField" promptText="Student ID"/>
+                    <TextField fx:id="nameField" promptText="Full Name"/>
+                    <TextField fx:id="emailField" promptText="Email"/>
+                    <ComboBox fx:id="departmentChoiceBox" promptText="Select Department..." maxWidth="Infinity"/>
+                    <TextField fx:id="phoneField" promptText="Phone"/>
+
+                    <HBox spacing="16" alignment="CENTER_LEFT">
+                        <Label text="Gender:" styleClass="section-title"/>
+                        <RadioButton fx:id="maleRadio" text="Male">
+                            <toggleGroup>
+                                <ToggleGroup fx:id="genderGroup"/>
+                            </toggleGroup>
+                        </RadioButton>
+                        <RadioButton fx:id="femaleRadio" text="Female" toggleGroup="$genderGroup"/>
+                    </HBox>
+
+                    <VBox fx:id="passwordBox" spacing="10">
+                        <!-- Two labels instead of one: the note in brackets keeps
+                             its own smaller, lighter type, so the whole line
+                             stays inside the card instead of being clipped. -->
+                        <HBox spacing="8" alignment="BASELINE_LEFT">
+                            <Label text="Login credentials" styleClass="section-title"/>
+                            <Label text="(new member only)" styleClass="field-hint"/>
+                        </HBox>
+                        <PasswordField fx:id="passwordField" promptText="Password"/>
+                        <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password"/>
+                    </VBox>
+
+                    <HBox spacing="10">
+                        <Button text="Add" styleClass="btn-success" onAction="#handleAdd" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                        <Button text="Update" styleClass="btn-primary" onAction="#handleUpdate" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <HBox spacing="10">
+                        <Button text="Delete" styleClass="btn-danger" onAction="#handleDelete" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                        <Button text="Clear" styleClass="btn-secondary" onAction="#handleClear" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                    </HBox>
+
+                    <Label fx:id="formErrorLabel" styleClass="error-text" wrapText="true"/>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </right>
+
+</BorderPane>

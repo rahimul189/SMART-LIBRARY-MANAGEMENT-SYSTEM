@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smartlibrary.controller.BookController"
+            prefWidth="980" prefHeight="600"
+            styleClass="content-pane">
+
+    <top>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="10"/>
+            </padding>
+            <Label text="Manage Books" styleClass="page-title"/>
+            <TextField fx:id="searchField" promptText="Search by title, author or ISBN..."/>
+        </VBox>
+    </top>
+
+    <center>
+        <!-- The table keeps its own built-in scrollbars: vertical scrolling
+             appears as soon as there are more rows than fit, and a horizontal
+             scrollbar appears whenever the window is too narrow for the
+             columns (UNCONSTRAINED policy, see the controller) - the columns
+             keep their readable widths instead of being squeezed. The
+             minWidth/minHeight=0 lets the pane hand the table only whatever
+             space is left - the table scrolls inside that space instead of
+             overflowing onto the form panel. -->
+        <TableView fx:id="bookTable" minWidth="0" minHeight="0">
+            <columns>
+                <TableColumn fx:id="titleColumn" text="Title" prefWidth="220" minWidth="160"/>
+                <TableColumn fx:id="authorColumn" text="Author" prefWidth="170" minWidth="130"/>
+                <TableColumn fx:id="categoryColumn" text="Category" prefWidth="120" minWidth="100"/>
+                <TableColumn fx:id="isbnColumn" text="ISBN" prefWidth="120" minWidth="100"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="100" minWidth="90"/>
+            </columns>
+            <placeholder>
+                <Label text="No books to show yet."/>
+            </placeholder>
+            <BorderPane.margin>
+                <Insets left="20" right="10" top="10" bottom="20"/>
+            </BorderPane.margin>
+        </TableView>
+    </center>
+
+    <right>
+        <!-- The detail form lives in a ScrollPane styled as the white card, so
+             the card always fills the panel height while the fields themselves
+             stay scrollable when the window is too short to show them all. -->
+        <ScrollPane fitToWidth="true"
+                    minWidth="260" prefWidth="300"
+                    styleClass="login-card">
+            <BorderPane.margin>
+                <Insets right="20" top="10" bottom="20"/>
+            </BorderPane.margin>
+
+            <content>
+                <VBox spacing="10" minWidth="0">
+                    <padding>
+                        <Insets top="20" left="20" right="20" bottom="20"/>
+                    </padding>
+
+                    <Label text="Book Details" styleClass="section-title"/>
+
+                    <TextField fx:id="titleField" promptText="Title"/>
+                    <TextField fx:id="authorField" promptText="Author"/>
+                    <ComboBox fx:id="categoryChoiceBox" promptText="Select category..." maxWidth="Infinity"/>
+                    <TextField fx:id="isbnField" promptText="ISBN"/>
+                    <TextArea fx:id="descriptionArea" promptText="Description" wrapText="true" prefRowCount="4"/>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <ImageView fx:id="coverImageView" fitWidth="55" fitHeight="75" preserveRatio="true"/>
+                        <Button text="Choose Cover..." styleClass="btn-secondary" onAction="#handleChooseCover"/>
+                    </HBox>
+
+                    <HBox spacing="10">
+                        <Button text="Add" styleClass="btn-success" onAction="#handleAdd" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                        <Button text="Update" styleClass="btn-primary" onAction="#handleUpdate" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <HBox spacing="10">
+                        <Button text="Delete" styleClass="btn-danger" onAction="#handleDelete" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                        <Button text="Clear" styleClass="btn-secondary" onAction="#handleClear" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                    </HBox>
+
+                    <Label fx:id="formErrorLabel" styleClass="error-text" wrapText="true"/>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </right>
+
+</BorderPane>
