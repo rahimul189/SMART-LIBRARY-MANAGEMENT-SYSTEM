@@ -5,7 +5,7 @@ import com.smartlibrary.concurrency.RefreshQueue;
 import com.smartlibrary.data.AvailableBookRepository;
 import com.smartlibrary.data.LibraryRepository;
 import com.smartlibrary.data.MemberRepository;
-import com.smartlibrary.database.SQLiteConnection;
+import com.smartlibrary.database.Transactions;
 import com.smartlibrary.model.Book;
 import com.smartlibrary.model.Member;
 import com.smartlibrary.ui.FormMessage;
@@ -15,9 +15,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -72,6 +69,38 @@ public class IssueBookController {
         });
     }
 
+    /**
+     * Records the loan: one borrow record plus the book's new status, applied
+     * together in a single transaction.
+     *
+     * The SQL runs on a pool worker, not on the JavaFX thread - the window
+     * stays responsive and the combo boxes are only touched once the outcome
+     * is known. Availability is re-checked inside the transaction, so two
+     * admin windows racing for the same book cannot both succeed.
+     *
+     * @return null on success, or the message to show on failure
+     */
+    private static String issueLoan(String studentId, int bookId, String issueDate) {
+        try (Transactions tx = Transactions.begin()) {
+
+            int available = tx.queryInt(
+                    "SELECT COUNT(*) FROM books WHERE id = ? AND status = 'AVAILABLE'", bookId);
+            if (available == 0) {
+                return "That book is no longer available.";
+            }
+
+            tx.update("INSERT INTO borrow_records (student_id, book_id, issue_date, status) "
+                    + "VALUES (?, ?, ?, 'BORROWED')", studentId, bookId, issueDate);
+            tx.update("UPDATE books SET status = 'BORROWED' WHERE id = ?", bookId);
+
+            tx.commit();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to issue book: " + e.getMessage();
+        }
+    }
+
     @FXML
     private void handleIssue() {
         FormMessage.clear(errorLabel);
@@ -85,78 +114,34 @@ public class IssueBookController {
             return;
         }
 
-        Connection conn = null;
-        try {
-            conn = SQLiteConnection.connect();
-            conn.setAutoCommit(false);
+        // Read the values the background task needs now: JavaFX controls may
+        // not be touched from another thread, and the admin may well change
+        // the selection before the write finishes.
+        String studentId = student.getStudentId();
+        int bookId = book.getId();
+        String issueDateText = issueDate.toString();
+        String bookTitle = book.getTitle();
+        String studentName = student.getName();
 
-            // Re-check availability inside the transaction in case another
-            // admin window issued the same book a moment ago.
-            try (PreparedStatement check = conn.prepareStatement(
-                    "SELECT status FROM books WHERE id = ?")) {
-                check.setInt(1, book.getId());
-                try (ResultSet rs = check.executeQuery()) {
-                    if (!rs.next() || !"AVAILABLE".equals(rs.getString("status"))) {
-                        conn.rollback();
-                        FormMessage.error(errorLabel, "That book is no longer available.");
-                        loadAvailableBooks();
-                        return;
-                    }
+        AppExecutors.execute(() -> {
+            String failure = issueLoan(studentId, bookId, issueDateText);
+
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                // Either way the list is reloaded: a failed availability check
+                // means another window took the book, so the combo box has to
+                // catch up with whatever is really on the shelf.
+                loadAvailableBooks();
+
+                if (error != null) {
+                    FormMessage.error(errorLabel, error);
+                    return;
                 }
-            }
-
-            try (PreparedStatement insert = conn.prepareStatement(
-                    "INSERT INTO borrow_records (student_id, book_id, issue_date, status) " +
-                            "VALUES (?, ?, ?, 'BORROWED')")) {
-                insert.setString(1, student.getStudentId());
-                insert.setInt(2, book.getId());
-                insert.setString(3, issueDate.toString());
-                insert.executeUpdate();
-            }
-
-            try (PreparedStatement update = conn.prepareStatement(
-                    "UPDATE books SET status = 'BORROWED' WHERE id = ?")) {
-                update.setInt(1, book.getId());
-                update.executeUpdate();
-            }
-
-            conn.commit();
-
-            String bookTitle = book.getTitle();
-            String studentName = student.getName();
-
-            loadAvailableBooks();
-            bookComboBox.setValue(null);
-            issueDatePicker.setValue(LocalDate.now());
-
-            FormMessage.success(errorLabel,
-                    "\"" + bookTitle + "\" issued to " + studentName + ".");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackQuietly(conn);
-            FormMessage.error(errorLabel, "Failed to issue book: " + e.getMessage());
-        } finally {
-            closeQuietly(conn);
-        }
-    }
-
-    private void rollbackQuietly(Connection conn) {
-        if (conn == null) return;
-        try {
-            conn.rollback();
-        } catch (SQLException ignored) {
-            // best effort
-        }
-    }
-
-    private void closeQuietly(Connection conn) {
-        if (conn == null) return;
-        try {
-            conn.setAutoCommit(true);
-            conn.close();
-        } catch (SQLException ignored) {
-            // best effort
-        }
+                bookComboBox.setValue(null);
+                issueDatePicker.setValue(LocalDate.now());
+                FormMessage.success(errorLabel,
+                        "\"" + bookTitle + "\" issued to " + studentName + ".");
+            });
+        });
     }
 }
