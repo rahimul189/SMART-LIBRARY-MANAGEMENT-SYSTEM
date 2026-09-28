@@ -150,6 +150,104 @@ public class BookController {
         });
     }
 
+    // ------------------------------------------------------------------
+    // Writes
+    //
+    // Every statement below runs on a pool worker, never on the JavaFX
+    // thread. Each returns null on success or the message to show, and the
+    // handlers only touch the controls once they are back on the FX thread.
+    // ------------------------------------------------------------------
+
+    /**
+     * Inserts a book.
+     *
+     * @return null on success, or the message to show on failure
+     */
+    private static String insertBook(String title, String author, String category,
+                                     String isbn, String description, String coverPath) {
+        String sql = "INSERT INTO books (title, author, category, isbn, description, cover_path, status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, 'AVAILABLE')";
+        try (Connection conn = SQLiteConnection.connect();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, title);
+            ps.setString(2, author);
+            ps.setString(3, category);
+            ps.setString(4, isbn);
+            ps.setString(5, description);
+            ps.setString(6, coverPath);
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to add book: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Updates a book's editable columns; the status is deliberately not among
+     * them, because only issuing and returning a book may change it.
+     *
+     * @return null on success, or the message to show on failure
+     */
+    private static String updateBook(int id, String title, String author, String category,
+                                     String isbn, String description, String coverPath) {
+        String sql = "UPDATE books SET title = ?, author = ?, category = ?, isbn = ?, "
+                + "description = ?, cover_path = ? WHERE id = ?";
+        try (Connection conn = SQLiteConnection.connect();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, title);
+            ps.setString(2, author);
+            ps.setString(3, category);
+            ps.setString(4, isbn);
+            ps.setString(5, description);
+            ps.setString(6, coverPath);
+            ps.setInt(7, id);
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to update book: " + e.getMessage();
+        }
+    }
+
+    /** Deletes a book row. @return null on success, or the message to show */
+    private static String deleteBook(int id) {
+        try (Connection conn = SQLiteConnection.connect();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM books WHERE id = ?")) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to delete book: " + e.getMessage();
+        }
+    }
+
+    /**
+     * True when any borrow record (borrowed or returned) points at this book.
+     *
+     * borrow_records.book_id is a real foreign key into books.id, so SQLite
+     * would refuse the DELETE anyway. Checking first turns that raw constraint
+     * error into an explanation the admin can act on.
+     *
+     * <p>A failure is reported as false, which lets the DELETE attempt through
+     * and surfaces the database's own error instead of hiding it behind a
+     * misleading message.
+     */
+    private static boolean hasBorrowHistory(int bookId) {
+        try (Connection conn = SQLiteConnection.connect();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM borrow_records WHERE book_id = ?")) {
+            ps.setInt(1, bookId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private void populateForm(Book book) {
         titleField.setText(book.getTitle());
         authorField.setText(book.getAuthor());
@@ -225,34 +323,31 @@ public class BookController {
         String isbn = emptyToNull(isbnField.getText());
         String description = emptyToNull(descriptionArea.getText());
 
-        String coverPath;
-        try {
-            coverPath = savePendingCoverIfAny();
-        } catch (IOException e) {
-            FormMessage.error(formErrorLabel, "Failed to save cover image: " + e.getMessage());
-            return;
-        }
+        // Copying the file is disk I/O and the INSERT is SQL, so the whole
+        // thing happens on a pool worker.
+        String titleValue = title.trim();
+        String authorValue = author.trim();
 
-        String sql = "INSERT INTO books (title, author, category, isbn, description, cover_path, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, 'AVAILABLE')";
+        AppExecutors.execute(() -> {
+            String failure;
+            try {
+                String coverPath = savePendingCoverIfAny();
+                failure = insertBook(titleValue, authorValue, category, isbn, description, coverPath);
+            } catch (IOException e) {
+                failure = "Failed to save cover image: " + e.getMessage();
+            }
 
-        try (Connection conn = SQLiteConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, title.trim());
-            ps.setString(2, author.trim());
-            ps.setString(3, category);
-            ps.setString(4, isbn);
-            ps.setString(5, description);
-            ps.setString(6, coverPath);
-            ps.executeUpdate();
-
-            loadBooksFromDb();
-            handleClear();
-            FormMessage.success(formErrorLabel, "Book added.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            FormMessage.error(formErrorLabel, "Failed to add book: " + e.getMessage());
-        }
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                loadBooksFromDb();
+                if (error != null) {
+                    FormMessage.error(formErrorLabel, error);
+                    return;
+                }
+                handleClear();
+                FormMessage.success(formErrorLabel, "Book added.");
+            });
+        });
     }
 
     @FXML
@@ -275,35 +370,31 @@ public class BookController {
         String isbn = emptyToNull(isbnField.getText());
         String description = emptyToNull(descriptionArea.getText());
 
-        String coverPath;
-        try {
-            coverPath = savePendingCoverIfAny();
-        } catch (IOException e) {
-            FormMessage.error(formErrorLabel, "Failed to save cover image: " + e.getMessage());
-            return;
-        }
+        int bookId = selected.getId();
+        String titleValue = title.trim();
+        String authorValue = author.trim();
 
-        String sql = "UPDATE books SET title = ?, author = ?, category = ?, isbn = ?, " +
-                "description = ?, cover_path = ? WHERE id = ?";
+        AppExecutors.execute(() -> {
+            String failure;
+            try {
+                String coverPath = savePendingCoverIfAny();
+                failure = updateBook(bookId, titleValue, authorValue,
+                        category, isbn, description, coverPath);
+            } catch (IOException e) {
+                failure = "Failed to save cover image: " + e.getMessage();
+            }
 
-        try (Connection conn = SQLiteConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, title.trim());
-            ps.setString(2, author.trim());
-            ps.setString(3, category);
-            ps.setString(4, isbn);
-            ps.setString(5, description);
-            ps.setString(6, coverPath);
-            ps.setInt(7, selected.getId());
-            ps.executeUpdate();
-
-            loadBooksFromDb();
-            handleClear();
-            FormMessage.success(formErrorLabel, "Book updated.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            FormMessage.error(formErrorLabel, "Failed to update book: " + e.getMessage());
-        }
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                loadBooksFromDb();
+                if (error != null) {
+                    FormMessage.error(formErrorLabel, error);
+                    return;
+                }
+                handleClear();
+                FormMessage.success(formErrorLabel, "Book updated.");
+            });
+        });
     }
 
     @FXML
@@ -321,17 +412,6 @@ public class BookController {
             return;
         }
 
-        // borrow_records.book_id is a real foreign key into books.id (enforced
-        // with PRAGMA foreign_keys = ON), so a book that appears in any borrow
-        // record can no longer be deleted - SQLite would reject the DELETE and
-        // those records would be left pointing at a book that is gone.
-        if (hasBorrowHistory(selected.getId())) {
-            FormMessage.error(formErrorLabel,
-                    "This book appears in the library's borrow history, so it cannot be "
-                            + "deleted while those borrow records exist.");
-            return;
-        }
-
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Delete \"" + selected.getTitle() + "\"? This cannot be undone.");
         confirm.setHeaderText(null);
@@ -339,34 +419,28 @@ public class BookController {
             return;
         }
 
-        String sql = "DELETE FROM books WHERE id = ?";
-        try (Connection conn = SQLiteConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, selected.getId());
-            ps.executeUpdate();
+        int bookId = selected.getId();
 
-            loadBooksFromDb();
-            handleClear();
-            FormMessage.success(formErrorLabel, "Book deleted.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            FormMessage.error(formErrorLabel, "Failed to delete book: " + e.getMessage());
-        }
-    }
+        AppExecutors.execute(() -> {
+            // Both this check and the DELETE are SQL, so both belong off the
+            // FX thread. The history check also has to happen after the dialog:
+            // confirming takes time, and the database may have changed.
+            String failure = hasBorrowHistory(bookId)
+                    ? "This book appears in the library's borrow history, so it cannot be "
+                            + "deleted while those borrow records exist."
+                    : deleteBook(bookId);
 
-    /** True when any borrow record (borrowed or returned) points at this book. */
-    private boolean hasBorrowHistory(int bookId) {
-        String sql = "SELECT COUNT(*) FROM borrow_records WHERE book_id = ?";
-        try (Connection conn = SQLiteConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, bookId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                loadBooksFromDb();
+                if (error != null) {
+                    FormMessage.error(formErrorLabel, error);
+                    return;
+                }
+                handleClear();
+                FormMessage.success(formErrorLabel, "Book deleted.");
+            });
+        });
     }
 
     @FXML
