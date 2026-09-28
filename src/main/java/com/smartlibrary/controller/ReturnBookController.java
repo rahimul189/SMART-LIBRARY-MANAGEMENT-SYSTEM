@@ -3,6 +3,7 @@ package com.smartlibrary.controller;
 import com.smartlibrary.concurrency.AppExecutors;
 import com.smartlibrary.concurrency.RefreshQueue;
 import com.smartlibrary.database.SQLiteConnection;
+import com.smartlibrary.database.Transactions;
 import com.smartlibrary.model.LoanRules;
 import com.smartlibrary.ui.FormMessage;
 import javafx.collections.FXCollections;
@@ -127,6 +128,25 @@ public class ReturnBookController {
                 measured.statusText());
     }
 
+    /**
+     * Closes a loan: the borrow record becomes RETURNED and the book goes back
+     * on the shelf, applied together in one transaction.
+     *
+     * @return null on success, or the message to show on failure
+     */
+    private static String returnLoan(int recordId, int bookId, String returnDate) {
+        try (Transactions tx = Transactions.begin()) {
+            tx.update("UPDATE borrow_records SET status = 'RETURNED', return_date = ? WHERE id = ?",
+                    returnDate, recordId);
+            tx.update("UPDATE books SET status = 'AVAILABLE' WHERE id = ?", bookId);
+            tx.commit();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to return book: " + e.getMessage();
+        }
+    }
+
     @FXML
     private void handleReturn() {
         FormMessage.clear(errorLabel);
@@ -143,61 +163,30 @@ public class ReturnBookController {
             return;
         }
 
-        Connection conn = null;
-        try {
-            conn = SQLiteConnection.connect();
-            conn.setAutoCommit(false);
+        // Copy the row's values out before the write leaves the FX thread: the
+        // selection may change while the transaction is in flight, and reading
+        // a control from a worker thread is not allowed.
+        int recordId = selected.getRecordId();
+        int bookId = selected.getBookId();
+        String returnDateText = returnDate.toString();
+        String bookTitle = selected.getBookTitle();
+        String studentName = selected.getStudentName();
 
-            try (PreparedStatement updateRecord = conn.prepareStatement(
-                    "UPDATE borrow_records SET status = 'RETURNED', return_date = ? WHERE id = ?")) {
-                updateRecord.setString(1, returnDate.toString());
-                updateRecord.setInt(2, selected.getRecordId());
-                updateRecord.executeUpdate();
-            }
+        AppExecutors.execute(() -> {
+            String failure = returnLoan(recordId, bookId, returnDateText);
 
-            try (PreparedStatement updateBook = conn.prepareStatement(
-                    "UPDATE books SET status = 'AVAILABLE' WHERE id = ?")) {
-                updateBook.setInt(1, selected.getBookId());
-                updateBook.executeUpdate();
-            }
-
-            conn.commit();
-
-            String bookTitle = selected.getBookTitle();
-            String studentName = selected.getStudentName();
-
-            loadBorrowedRows();
-            returnDatePicker.setValue(LocalDate.now());
-
-            FormMessage.success(errorLabel,
-                    "\"" + bookTitle + "\" returned for " + studentName + ".");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            rollbackQuietly(conn);
-            FormMessage.error(errorLabel, "Failed to return book: " + e.getMessage());
-        } finally {
-            closeQuietly(conn);
-        }
-    }
-
-    private void rollbackQuietly(Connection conn) {
-        if (conn == null) return;
-        try {
-            conn.rollback();
-        } catch (SQLException ignored) {
-            // best effort
-        }
-    }
-
-    private void closeQuietly(Connection conn) {
-        if (conn == null) return;
-        try {
-            conn.setAutoCommit(true);
-            conn.close();
-        } catch (SQLException ignored) {
-            // best effort
-        }
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                loadBorrowedRows();
+                if (error != null) {
+                    FormMessage.error(errorLabel, error);
+                    return;
+                }
+                returnDatePicker.setValue(LocalDate.now());
+                FormMessage.success(errorLabel,
+                        "\"" + bookTitle + "\" returned for " + studentName + ".");
+            });
+        });
     }
 
     /**
