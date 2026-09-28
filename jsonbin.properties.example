@@ -1,0 +1,13 @@
+# Template for the online authentication configuration.
+#
+# Copy this file to jsonbin.properties in the project root and fill in your own
+# values. jsonbin.properties is git-ignored - never commit the real key.
+#
+# Get both values from https://jsonbin.io :
+#   - the master key is shown in your account's API keys page
+#   - the bin id is the id in the URL of the bin you created, and its contents
+#     must be the { "admins": [...], "students": [...] } document described in
+#     the README.
+
+api.key=$YOUR_JSONBIN_MASTER_KEY
+bin.id=$YOUR_BIN_ID
