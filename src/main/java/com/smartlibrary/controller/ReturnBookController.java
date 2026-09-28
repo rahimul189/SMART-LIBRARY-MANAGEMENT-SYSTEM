@@ -3,8 +3,8 @@ package com.smartlibrary.controller;
 import com.smartlibrary.concurrency.AppExecutors;
 import com.smartlibrary.concurrency.RefreshQueue;
 import com.smartlibrary.database.SQLiteConnection;
+import com.smartlibrary.model.LoanRules;
 import com.smartlibrary.ui.FormMessage;
-import com.smartlibrary.ui.StudentHome;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -104,28 +104,27 @@ public class ReturnBookController {
         });
     }
 
-    /** Adds the three deadline fields to a row: deadline, days kept, status. */
+    /**
+     * Adds the three deadline fields to a row: deadline, days kept, status.
+     *
+     * The measurement itself is {@link LoanRules}' - the same code the student
+     * dashboard uses - so a loan cannot show one deadline here and a different
+     * one on the student's screen. An issue date that is not a valid ISO date
+     * leaves the three fields empty rather than failing the whole query.
+     */
     private static BorrowRow withDeadline(BorrowRow row, LocalDate today) {
-        String deadline = "";
-        String daysKept = "";
-        String status = "";
+        LoanRules.Loan measured = LoanRules.measure(row.getBookTitle(), row.getIssueDate(), today);
 
-        try {
-            LocalDate issue = LocalDate.parse(row.getIssueDate());
-            LocalDate due = issue.plusDays(StudentHome.MAX_LOAN_DAYS);
-            long kept = Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(issue, today));
-            long left = StudentHome.MAX_LOAN_DAYS - kept;
-
-            deadline = due.toString();
-            daysKept = kept + " / " + StudentHome.MAX_LOAN_DAYS;
-            status = StudentHome.statusText((int) left);
-        } catch (RuntimeException e) {
-            // Unexpected date format: the row still lists the issue date.
+        if (measured == null) {
+            return new BorrowRow(row.getRecordId(), row.getStudentId(), row.getStudentName(),
+                    row.getBookId(), row.getBookTitle(), row.getIssueDate());
         }
 
         return new BorrowRow(row.getRecordId(), row.getStudentId(), row.getStudentName(),
                 row.getBookId(), row.getBookTitle(), row.getIssueDate(),
-                deadline, daysKept, status);
+                measured.deadline(),
+                measured.daysKept() + " / " + LoanRules.MAX_LOAN_DAYS,
+                measured.statusText());
     }
 
     @FXML

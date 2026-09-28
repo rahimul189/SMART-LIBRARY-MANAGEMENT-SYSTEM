@@ -13,8 +13,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import com.smartlibrary.model.LoanRules;
+
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -43,16 +44,12 @@ import java.util.function.Function;
  */
 public final class StudentHome {
 
-    /** A book may be kept for at most this many days from its issue date. */
-    public static final int MAX_LOAN_DAYS = 60;
-
-    /** A deadline that falls within this many days is shown as "due soon". */
-    public static final int SOON_DAYS = 7;
-
-    /** From this many days kept on, the progress bar turns amber (red at 60). */
-    public static final int AMBER_FROM_DAYS = 40;
-
-    /** How many activities the "Recent activity" card shows. */
+    /**
+     * How many activities the "Recent activity" card shows.
+     *
+     * The 60-day period, the "due soon" window and the status wording live in
+     * {@link LoanRules}, shared with the admin return screen.
+     */
     private static final int RECENT_LIMIT = 5;
 
     // ------------------------------------------------------------------
@@ -66,6 +63,11 @@ public final class StudentHome {
     /** A borrowed book plus its position against the 60-day rule. */
     public record Loan(String title, String issueDate, String deadline,
                        int daysKept, int daysLeft) {
+
+        static Loan of(LoanRules.Loan measured) {
+            return new Loan(measured.title(), measured.issueDate(), measured.deadline(),
+                    measured.daysKept(), measured.daysLeft());
+        }
     }
 
     /** One line of the activity feed: an issue or a return of a book. */
@@ -110,9 +112,9 @@ public final class StudentHome {
                 }
             }
             if ("BORROWED".equals(entry.status())) {
-                LocalDate issue = parseDate(entry.issueDate());
-                if (issue != null) {
-                    loans.add(loan(entry.title(), issue, today));
+                LoanRules.Loan measured = LoanRules.measure(entry.title(), entry.issueDate(), today);
+                if (measured != null) {
+                    loans.add(Loan.of(measured));
                 }
             }
         }
@@ -121,7 +123,7 @@ public final class StudentHome {
 
         List<Loan> dueSoon = new ArrayList<>();
         for (Loan loan : loans) {
-            if (loan.daysLeft() >= 0 && loan.daysLeft() <= SOON_DAYS) {
+            if (LoanRules.isDueSoon(loan.daysLeft())) {
                 dueSoon.add(loan);
             }
         }
@@ -137,40 +139,9 @@ public final class StudentHome {
         return new Snapshot(name, entries.size(), returned, loans.size(), loans, dueSoon, recent);
     }
 
-    /** One borrowed book measured against the 60-day rule. */
-    private static Loan loan(String title, LocalDate issue, LocalDate today) {
-        int kept = (int) Math.max(0, ChronoUnit.DAYS.between(issue, today));
-        return new Loan(title,
-                issue.toString(),
-                issue.plusDays(MAX_LOAN_DAYS).toString(),
-                kept,
-                MAX_LOAN_DAYS - kept);
-    }
-
-    private static LocalDate parseDate(String iso) {
-        try {
-            return LocalDate.parse(iso);
-        } catch (RuntimeException e) {
-            return null; // unexpected format: the row simply gets no progress bar
-        }
-    }
-
     /** "Overdue 5 days" / "Due today" / "Due in 3 days" / "46 days left". */
     public static String statusText(int daysLeft) {
-        if (daysLeft < 0) {
-            int overdue = -daysLeft;
-            return "Overdue " + overdue + (overdue == 1 ? " day" : " days");
-        }
-        if (daysLeft == 0) {
-            return "Due today";
-        }
-        if (daysLeft == 1) {
-            return "Due in 1 day";
-        }
-        if (daysLeft <= SOON_DAYS) {
-            return "Due in " + daysLeft + " days";
-        }
-        return daysLeft + " days left";
+        return LoanRules.statusText(daysLeft);
     }
 
     // ------------------------------------------------------------------
@@ -302,7 +273,9 @@ public final class StudentHome {
 
     /** The 60-day rule, in the card style every other page already uses. */
     private VBox ruleCard() {
-        Label head = new Label("Keep each book for up to 2 months (60 days) from the issue date");
+        Label head = new Label("Keep each book for up to "
+                + (LoanRules.MAX_LOAN_DAYS / 30) + " months ("
+                + LoanRules.MAX_LOAN_DAYS + " days) from the issue date");
         head.getStyleClass().add("section-title");
         head.setWrapText(true);
         head.setMaxWidth(Double.MAX_VALUE);
@@ -424,7 +397,7 @@ public final class StudentHome {
         chip.getStyleClass().add("dash-chip");
         if (loan.daysLeft() < 0) {
             chip.getStyleClass().add("dash-chip-late");
-        } else if (loan.daysLeft() <= SOON_DAYS) {
+        } else if (LoanRules.isDueSoon(loan.daysLeft())) {
             chip.getStyleClass().add("dash-chip-soon");
         }
 
@@ -437,25 +410,23 @@ public final class StudentHome {
         top.setMinWidth(0);
         HBox.setHgrow(head, Priority.ALWAYS);
 
-        double fraction = Math.min(1.0, loan.daysKept() / (double) MAX_LOAN_DAYS);
+        double fraction = Math.min(1.0, loan.daysKept() / (double) LoanRules.MAX_LOAN_DAYS);
         ProgressBar bar = new ProgressBar(fraction);
         bar.getStyleClass().add("dash-progress");
         // Colour follows the days kept: green up to 39, amber 40-59, red from
         // the full 60 (the status pill above it follows the days left).
-        if (loan.daysKept() >= MAX_LOAN_DAYS) {
+        if (loan.daysKept() >= LoanRules.MAX_LOAN_DAYS) {
             bar.getStyleClass().add("dash-progress-late");
-        } else if (loan.daysKept() >= AMBER_FROM_DAYS) {
+        } else if (LoanRules.isAmber(loan.daysKept())) {
             bar.getStyleClass().add("dash-progress-soon");
         }
         bar.setMinWidth(0);
         bar.setMaxWidth(Double.MAX_VALUE);
 
-        Label kept = new Label(loan.daysKept() + " of " + MAX_LOAN_DAYS + " days kept");
+        Label kept = new Label(loan.daysKept() + " of " + LoanRules.MAX_LOAN_DAYS + " days kept");
         kept.getStyleClass().add("stat-hint");
 
-        Label left = new Label(loan.daysLeft() < 0
-                ? (-loan.daysLeft()) + " days overdue"
-                : loan.daysLeft() + (loan.daysLeft() == 1 ? " day left" : " days left"));
+        Label left = new Label(LoanRules.daysLeftText(loan.daysLeft()));
         left.getStyleClass().add("stat-hint");
 
         HBox days = new HBox(10, kept, left);
@@ -477,9 +448,7 @@ public final class StudentHome {
         title.setWrapText(true);
         title.setMaxWidth(Double.MAX_VALUE);
 
-        String left = loan.daysLeft() == 0
-                ? "today"
-                : loan.daysLeft() + (loan.daysLeft() == 1 ? " day left" : " days left");
+        String left = loan.daysLeft() == 0 ? "today" : LoanRules.daysLeftText(loan.daysLeft());
         Label sub = new Label("Due " + loan.deadline() + " - " + left);
         sub.getStyleClass().add("stat-hint");
         sub.setWrapText(true);
