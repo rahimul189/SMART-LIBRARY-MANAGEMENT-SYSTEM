@@ -199,13 +199,13 @@ public class MemberController {
                     boolean registered = JsonAuthService.registerStudent(studentId, email, password);
                     if (!registered) {
                         // Roll back the SQLite row so we don't leave an orphaned profile with no login.
-                        deleteMemberRow(studentId);
+                        deleteMemberRowQuietly(studentId);
                         failure = "That Student ID or Email already has login credentials.";
                     }
                 } catch (JsonBinException e) {
                     // Online registration failed (no network, bad bin id, invalid JSON...):
                     // roll back the SQLite row so profile and login stay in step.
-                    deleteMemberRow(studentId);
+                    deleteMemberRowQuietly(studentId);
                     failure = e.getMessage();
                 }
             }
@@ -250,14 +250,13 @@ public class MemberController {
         }
     }
 
-    private void deleteMemberRow(String studentId) {
-        try (Connection conn = SQLiteConnection.connect();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM members WHERE student_id = ?")) {
-            ps.setString(1, studentId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    /**
+     * Deletes a member row without reporting anything - used only to roll back
+     * a registration whose online half failed. The rollback is best effort by
+     * nature, so there is no message worth showing.
+     */
+    private static void deleteMemberRowQuietly(String studentId) {
+        deleteMemberRow(studentId);
     }
 
     @FXML
@@ -278,28 +277,28 @@ public class MemberController {
 
         String department = departmentChoiceBox.getValue();
         String phone = trimToNull(phoneField.getText());
-        Gender gender = selectedGender();
+        String genderValue = labelOf(selectedGender());
+        String studentId = selected.getStudentId();
 
-        String sql = "UPDATE members SET name = ?, email = ?, department = ?, phone = ?, gender = ? " +
-                "WHERE student_id = ?";
+        AppExecutors.execute(() -> {
+            String failure = updateMember(studentId, name, email, department, phone, genderValue);
 
-        try (Connection conn = SQLiteConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, name);
-            ps.setString(2, email);
-            ps.setString(3, department);
-            ps.setString(4, phone);
-            ps.setString(5, gender == null ? null : gender.label());
-            ps.setString(6, selected.getStudentId());
-            ps.executeUpdate();
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                loadMembersFromDb();
+                if (error != null) {
+                    FormMessage.error(formErrorLabel, error);
+                    return;
+                }
+                handleClear();
+                FormMessage.success(formErrorLabel, "Member updated.");
+            });
+        });
+    }
 
-            loadMembersFromDb();
-            handleClear();
-            FormMessage.success(formErrorLabel, "Member updated.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            FormMessage.error(formErrorLabel, "Failed to update member: " + e.getMessage());
-        }
+    /** The label a {@link Gender} is stored under, or null when none is chosen. */
+    private static String labelOf(Gender gender) {
+        return gender == null ? null : gender.label();
     }
 
     @FXML
@@ -311,23 +310,6 @@ public class MemberController {
             return;
         }
 
-        if (hasActiveBorrows(selected.getStudentId())) {
-            FormMessage.error(formErrorLabel,
-                    "This member currently has borrowed book(s). Return them before deleting the member.");
-            return;
-        }
-
-        // borrow_records.student_id is a real foreign key into members.student_id
-        // (enforced with PRAGMA foreign_keys = ON), so a member with borrow
-        // history can no longer be deleted - SQLite would reject the DELETE and
-        // every borrow record would lose the member it points at.
-        if (hasBorrowHistory(selected.getStudentId())) {
-            FormMessage.error(formErrorLabel,
-                    "This member has borrowing history, so the member cannot be deleted "
-                            + "while those borrow records exist.");
-            return;
-        }
-
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Delete member \"" + selected.getName() + "\" (" + selected.getStudentId() + ")?\n"
                         + "Their login credentials in the online JSONBin.io store will NOT be removed automatically.");
@@ -336,23 +318,65 @@ public class MemberController {
             return;
         }
 
-        deleteMemberRow(selected.getStudentId());
-        loadMembersFromDb();
-        handleClear();
-        FormMessage.success(formErrorLabel, "Member deleted.");
+        String studentId = selected.getStudentId();
+
+        AppExecutors.execute(() -> {
+            // Both checks are SQL, so they belong off the FX thread, and both
+            // have to happen after the dialog: confirming takes time, and the
+            // database may have changed while it was open.
+            String failure;
+            if (hasActiveBorrows(studentId)) {
+                failure = "This member currently has borrowed book(s). "
+                        + "Return them before deleting the member.";
+            } else if (hasBorrowHistory(studentId)) {
+                failure = "This member has borrowing history, so the member cannot be deleted "
+                        + "while those borrow records exist.";
+            } else {
+                failure = deleteMemberRow(studentId);
+            }
+
+            final String error = failure;
+            AppExecutors.runFx(() -> {
+                loadMembersFromDb();
+                if (error != null) {
+                    FormMessage.error(formErrorLabel, error);
+                    return;
+                }
+                handleClear();
+                FormMessage.success(formErrorLabel, "Member deleted.");
+            });
+        });
     }
 
-    /** True while the member still has at least one book out. */
-    private boolean hasActiveBorrows(String studentId) {
+    /**
+     * True while the member still has at least one book out.
+     */
+    private static boolean hasActiveBorrows(String studentId) {
         return countBorrows(studentId, " AND status = 'BORROWED'") > 0;
     }
 
-    /** True when any borrow record (borrowed or returned) points at this member. */
-    private boolean hasBorrowHistory(String studentId) {
+    /**
+     * True when any borrow record (borrowed or returned) points at this member.
+     *
+     * borrow_records.student_id is a real foreign key into members.student_id,
+     * so SQLite would refuse the DELETE anyway. Checking first turns that raw
+     * constraint error into an explanation the admin can act on.
+     *
+     * <p>A failure is reported as false, which lets the DELETE attempt through
+     * and surfaces the database's own error instead of hiding it behind a
+     * misleading message.
+     */
+    private static boolean hasBorrowHistory(String studentId) {
         return countBorrows(studentId, "") > 0;
     }
 
-    private int countBorrows(String studentId, String extraWhere) {
+    /**
+     * Counts a member's borrow records, optionally restricted to the open ones.
+     *
+     * <p>A failure is reported as zero, so a database problem surfaces through
+     * the write that follows rather than being swallowed here.
+     */
+    private static int countBorrows(String studentId, String extraWhere) {
         String sql = "SELECT COUNT(*) FROM borrow_records WHERE student_id = ?" + extraWhere;
         try (Connection conn = SQLiteConnection.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -363,6 +387,52 @@ public class MemberController {
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
+        }
+    }
+
+    /**
+     * Updates a member's editable columns.
+     *
+     * The studentId and the online credentials are deliberately not among
+     * them: the id is the key the online login is matched on, and passwords
+     * are changed from the student's own Change Password page.
+     *
+     * @return null on success, or the message to show on failure
+     */
+    private static String updateMember(String studentId, String name, String email,
+                                       String department, String phone, String gender) {
+        String sql = "UPDATE members SET name = ?, email = ?, department = ?, phone = ?, gender = ? "
+                + "WHERE student_id = ?";
+        try (Connection conn = SQLiteConnection.connect();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setString(3, department);
+            ps.setString(4, phone);
+            ps.setString(5, gender);
+            ps.setString(6, studentId);
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to update member: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Deletes a member row.
+     *
+     * @return null on success, or the message to show on failure
+     */
+    private static String deleteMemberRow(String studentId) {
+        try (Connection conn = SQLiteConnection.connect();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM members WHERE student_id = ?")) {
+            ps.setString(1, studentId);
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Failed to delete member: " + e.getMessage();
         }
     }
 
