@@ -1,5 +1,7 @@
 package com.smartlibrary.database;
 
+import com.smartlibrary.util.DbPaths;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -14,7 +16,10 @@ import java.sql.Statement;
  */
 public class SQLiteConnection {
 
-    private static final String DB_URL = "jdbc:sqlite:library.db";
+    /** Resolved per call so the test suite can point it at a temporary file. */
+    private static String dbUrl() {
+        return DbPaths.jdbcUrl();
+    }
 
     /**
      * Opens (and if necessary creates) the connection to library.db.
@@ -23,7 +28,7 @@ public class SQLiteConnection {
      * (use try-with-resources).
      */
     public static Connection connect() throws SQLException {
-        Connection conn = DriverManager.getConnection(DB_URL);
+        Connection conn = DriverManager.getConnection(dbUrl());
         try {
             // Reads now also run on background threads (AppExecutors /
             // RefreshQueue) while the JavaFX thread may be writing. Without
