@@ -1,9 +1,24 @@
 target/
 .idea/
 *.iml
+*.ipr
+*.iws
+.vscode/
+
+# Local runtime state - recreated by the app, never committed
 library.db
+library.db-journal
+library.db-wal
+library.db-shm
 authentication.json
 profile-images.json
-jsonbin.properties
 covers/
 avatars/
+
+# Credentials - copy jsonbin.properties.example instead
+jsonbin.properties
+
+# Logs and OS noise
+*.log
+.DS_Store
+Thumbs.db
