@@ -90,14 +90,36 @@ public final class JsonBinConfig {
 
     // ---- helpers ----
 
+    /**
+     * The placeholders that {@link #isRealValue(String)} refuses to accept,
+     * shortest first. Anything listed here is treated as "still unconfigured"
+     * so it can never be sent to JSONBin.io as a credential.
+     *
+     * <p>Both the bare {@code YOUR_JSONBIN_...} form and the {@code $}-prefixed
+     * form used by {@code jsonbin.properties.example} are covered - checking
+     * only the bare form would have let the shipped {@code $YOUR_JSONBIN_...}
+     * through as if it were a real key.
+     */
+    private static final String[] PLACEHOLDERS = {
+            "YOUR_JSONBIN",
+            "$YOUR_JSONBIN",
+            "YOUR_BIN",
+            "$YOUR_BIN",
+            "YOUR_API",
+            "$YOUR_API"
+    };
+
     private static boolean isRealValue(String value) {
         if (value == null || value.isBlank()) {
             return false;
         }
         String upper = value.trim().toUpperCase(Locale.ROOT);
-        // The placeholders shipped in jsonbin.properties must never be sent
-        // as a real credential.
-        return !upper.startsWith("YOUR_JSONBIN");
+        for (String placeholder : PLACEHOLDERS) {
+            if (upper.startsWith(placeholder)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static String stripTrailingSlash(String url) {
